@@ -71,6 +71,9 @@ export default function useVoiceAssistant(unit?: number) {
 
   const [geminiConfigured, setGeminiConfigured] =
     useState<boolean | null>(null)
+
+  const [micError, setMicError] =
+    useState<string | null>(null)
   // --------------------------------
   // Refs
   // --------------------------------
@@ -271,6 +274,7 @@ export default function useVoiceAssistant(unit?: number) {
 
     transcriptRef.current = ""
     setTranscript("")
+    setMicError(null)
 
     const recognition =
       new Recognition()
@@ -323,6 +327,15 @@ export default function useVoiceAssistant(unit?: number) {
       console.error(
         "[VOICE] Recognition error:",
         event
+      )
+
+      const err = event as { error?: string }
+      setMicError(
+        err?.error === "not-allowed" || err?.error === "service-not-allowed"
+          ? "Microphone bị chặn. Kiểm tra quyền mic và thiết bị thu âm mặc định (robot USB có thể chiếm mic)."
+          : err?.error === "audio-capture"
+            ? "Không thể truy cập microphone. Robot USB có thể đang chiếm thiết bị thu âm."
+            : `Lỗi microphone: ${err?.error || "unknown"}`
       )
 
       setState("idle")
@@ -850,5 +863,7 @@ export default function useVoiceAssistant(unit?: number) {
     isRobotConnected,
     connectRobot,
     disconnectRobot,
+
+    micError,
   }
 }

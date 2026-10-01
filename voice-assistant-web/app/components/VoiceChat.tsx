@@ -25,6 +25,7 @@ export default function VoiceChat({ unit }: VoiceChatProps) {
     isRobotConnected,
     connectRobot,
     disconnectRobot,
+    micError,
   } = useVoiceAssistant(unit)
 
   const getStatusText = () => {
@@ -137,6 +138,11 @@ export default function VoiceChat({ unit }: VoiceChatProps) {
             <div className="min-h-[70px] rounded-2xl bg-blue-50 border-2 border-blue-200 p-4 text-blue-900">
               {transcript || <span className="text-blue-600">Say something...</span>}
             </div>
+            {micError && (
+              <div className="mt-2 rounded-xl border-2 border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                ⚠️ {micError}
+              </div>
+            )}
           </div>
 
           {/* Assistant Response */}
