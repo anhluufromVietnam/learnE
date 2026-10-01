@@ -62,7 +62,7 @@ OLLAMA_MODELS = tuple(
         model.strip()
         for model in os.getenv(
             "OLLAMA_MODELS",
-            f"{OLLAMA_MODEL},qwen3:0.6b,qwen3:1.7b,llama3.2:3b",
+            f"{OLLAMA_MODEL},qwen3:0.6b,qwen3:1.7b,llama3.2:3b,gemma4:31b-cloud",
         ).split(",")
         if model.strip()
     )

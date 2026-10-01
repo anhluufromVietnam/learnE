@@ -102,6 +102,60 @@ export default function useVoiceAssistant(unit?: number) {
   const listeningTimeoutRef =
     useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // --------------------------------
+  // Robot serial connection
+  // --------------------------------
+  const portRef = useRef<any>(null)
+  const writerRef =
+    useRef<WritableStreamDefaultWriter<Uint8Array> | null>(null)
+  const [isRobotConnected, setIsRobotConnected] = useState(false)
+
+  const sendSerialCommand = useCallback(async (cmd: string) => {
+    if (!writerRef.current) return
+    try {
+      const encoder = new TextEncoder()
+      await writerRef.current.write(encoder.encode(cmd))
+    } catch (err) {
+      console.error("Failed to send serial command:", err)
+    }
+  }, [])
+
+  const connectRobot = useCallback(async () => {
+    try {
+      if (!("serial" in navigator)) {
+        alert("Trình duyệt không hỗ trợ Web Serial API")
+        return
+      }
+      const port = await (navigator as any).serial.requestPort()
+      await port.open({ baudRate: 9600 })
+      portRef.current = port
+      writerRef.current = port.writable.getWriter()
+      setIsRobotConnected(true)
+    } catch (err) {
+      console.error("Serial connection failed:", err)
+    }
+  }, [])
+
+  const disconnectRobot = useCallback(async () => {
+    try {
+      writerRef.current?.releaseLock()
+      writerRef.current = null
+      if (portRef.current) {
+        await portRef.current.close()
+        portRef.current = null
+      }
+      setIsRobotConnected(false)
+    } catch (err) {
+      console.error("Serial disconnect failed:", err)
+    }
+  }, [])
+
+  // Send "1" while speaking, "0" otherwise
+  useEffect(() => {
+    if (!isRobotConnected) return
+    sendSerialCommand(state === "speaking" ? "1" : "0")
+  }, [state, isRobotConnected, sendSerialCommand])
+
   useEffect(() => {
     const savedModel = localStorage.getItem("voiceAssistant_model")
     const savedProvider = localStorage.getItem("voiceAssistant_provider")
@@ -792,5 +846,9 @@ export default function useVoiceAssistant(unit?: number) {
     sendMessage,
 
     stop,
+
+    isRobotConnected,
+    connectRobot,
+    disconnectRobot,
   }
 }

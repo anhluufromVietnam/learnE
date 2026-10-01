@@ -22,6 +22,9 @@ export default function VoiceChat({ unit }: VoiceChatProps) {
     provider,
     selectProvider,
     geminiConfigured,
+    isRobotConnected,
+    connectRobot,
+    disconnectRobot,
   } = useVoiceAssistant(unit)
 
   const getStatusText = () => {
@@ -71,16 +74,21 @@ export default function VoiceChat({ unit }: VoiceChatProps) {
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
                   Local Ollama model
                 </span>
-                <input
-                  list="ollama-models"
+                <select
                   value={selectedModel}
                   onChange={(event) => selectModel(event.target.value)}
-                  placeholder="qwen3:0.6b"
                   className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 outline-none transition focus:border-[#dc3e1d]"
-                />
-                <datalist id="ollama-models">
-                  {availableModels.map((model) => <option key={model} value={model} />)}
-                </datalist>
+                >
+                  {availableModels.length === 0 ? (
+                    <option value="">No models available</option>
+                  ) : (
+                    availableModels.map((model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))
+                  )}
+                </select>
               </label>
             ) : (
               <div
@@ -140,24 +148,38 @@ export default function VoiceChat({ unit }: VoiceChatProps) {
           </div>
 
           {/* Controls */}
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={startListening}
+                disabled={
+                  isListening ||
+                  isThinking ||
+                  isSpeaking ||
+                  (provider === "gemini" && geminiConfigured === false)
+                }
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold transition hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                🎤 Talk
+              </button>
+              <button
+                onClick={stop}
+                className="px-6 py-3 rounded-full bg-gray-100 border-2 border-gray-300 text-gray-700 font-bold transition hover:bg-gray-200"
+              >
+                Stop
+              </button>
+            </div>
+
+            {/* Robot connection */}
             <button
-              onClick={startListening}
-              disabled={
-                isListening ||
-                isThinking ||
-                isSpeaking ||
-                (provider === "gemini" && geminiConfigured === false)
-              }
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold transition hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={isRobotConnected ? disconnectRobot : connectRobot}
+              className={`px-6 py-3 rounded-full font-bold transition hover:shadow-lg ${
+                isRobotConnected
+                  ? "bg-green-500 text-white"
+                  : "bg-gradient-to-r from-[#1E40AF] to-[#4F46E5] text-white"
+              }`}
             >
-              🎤 Talk
-            </button>
-            <button
-              onClick={stop}
-              className="px-6 py-3 rounded-full bg-gray-100 border-2 border-gray-300 text-gray-700 font-bold transition hover:bg-gray-200"
-            >
-              Stop
+              {isRobotConnected ? "🤖 Robot connected" : "🤖 Connect robot"}
             </button>
           </div>
         </div>
